@@ -1,0 +1,61 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "simple.tmx",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "bg.tsx": {
+            "scaleInDock": 1
+        },
+        "numbers.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "plant.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "simple.tmx": {
+            "scale": 1,
+            "selectedLayer": 5,
+            "viewCenter": {
+                "x": 490.5,
+                "y": 349
+            }
+        },
+        "tsx/Decorationspre.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "tsx/bg.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "tsx/plant.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.imagePath": "C:/Projects/rust/prototyp/assets/map",
+    "map.height": 30,
+    "map.lastUsedFormat": "tmx",
+    "openFiles": [
+        "simple.tmx",
+        "plant.tsx",
+        "numbers.tsx"
+    ],
+    "project": "simple.tiled-project",
+    "property.type": "int",
+    "recentFiles": [
+        "numbers.tsx",
+        "plant.tsx",
+        "simple.tmx",
+        "tsx/plant.tsx",
+        "tsx/bg.tsx",
+        "tsx/Decorationspre.tsx"
+    ],
+    "tileset.lastUsedFormat": "tsx"
+}

@@ -1,6 +1,7 @@
-use std::collections::HashMap;
 use std::io::BufReader;
+use std::{collections::HashMap, path::Path};
 
+use bevy::prelude::Vec2;
 use bevy::{
     asset::{AssetLoader, AssetPath, LoadedAsset},
     log,
@@ -16,9 +17,9 @@ use bevy_ecs_tilemap::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use anyhow::Result;
-use tiled::{ObjectShape, PropertyValue};
+use tiled::{Object, ObjectShape, PropertyValue};
 
-use crate::{components::TileIdentifier, resources::TilesProperties};
+use crate::resources::{SignData, SignsPool, TilesProperties};
 
 #[derive(Default)]
 pub struct TiledMapPlugin;
@@ -77,12 +78,14 @@ impl AssetLoader for TiledLoader {
                 .parent()
                 .expect("The asset load context was empty.");
 
+            let filename_path = Path::new(load_context.path().file_name().unwrap());
+
             let curr_dir = std::env::current_dir().expect("Expected to get pwd.");
-            std::env::set_current_dir("assets/")?;
+            std::env::set_current_dir("assets/map")?;
 
             let mut loader = tiled::Loader::new();
             let map = loader
-                .load_tmx_map_from(BufReader::new(bytes), load_context.path())
+                .load_tmx_map_from(BufReader::new(bytes), filename_path)
                 .map_err(|e| anyhow::anyhow!("Could not load TMX map: {e}"))?;
 
             let mut dependencies = Vec::new();
@@ -153,6 +156,7 @@ pub fn process_loaded_maps(
     mut map_query: Query<(&Handle<TiledMap>, &mut TiledLayersStorage)>,
     new_maps: Query<&Handle<TiledMap>, Added<Handle<TiledMap>>>,
     mut tileset_props: ResMut<TilesProperties>,
+    mut signs_res: ResMut<SignsPool>,
 ) {
     let mut changed_maps = Vec::<Handle<TiledMap>>::default();
     for event in map_events.iter() {
@@ -205,7 +209,7 @@ pub fn process_loaded_maps(
 
             // Process logic layers first. Their data is needed in order to insert
             // the proper properties for the actual layers' tiles.
-            /*
+            let mut logic_layers = std::collections::HashMap::new();
             for layer in tiled_map.map.layers() {
                 let is_logic_layer = layer.name.starts_with("Logic");
                 if !is_logic_layer {
@@ -242,13 +246,31 @@ pub fn process_loaded_maps(
                 };
 
                 // Do something with each tile from this logic layer.
+                let mut v = Vec::new();
+                v.resize(map_size.x as usize * map_size.y as usize, 0);
                 for x in 0..map_size.x {
                     for y in 0..map_size.y {
+                        let mut mapped_y = y;
+                        if tiled_map.map.orientation == tiled::Orientation::Orthogonal {
+                            mapped_y = (tiled_map.map.height - 1) - y;
+                        }
 
+                        let mapped_x = x as i32;
+                        let mapped_y = mapped_y as i32;
+
+                        let layer_tile = match layer_data.get_tile(mapped_x, mapped_y) {
+                            Some(t) => t,
+                            None => {
+                                continue;
+                            }
+                        };
+
+                        v[(mapped_y * map_size.x as i32 + mapped_x) as usize] = layer_tile.id();
                     }
                 }
+
+                logic_layers.insert(parent.clone(), v);
             }
-            */
 
             tileset_props.props.clear();
             tileset_props
@@ -292,8 +314,81 @@ pub fn process_loaded_maps(
                         continue;
                     }
 
+                    let map_size = TilemapSize {
+                        x: tiled_map.map.width,
+                        y: tiled_map.map.height,
+                    };
+
+                    let grid_size = TilemapGridSize {
+                        x: tiled_map.map.tile_width as f32,
+                        y: tiled_map.map.tile_height as f32,
+                    };
+
+                    let map_type = TilemapType::Square;
+
                     let offset_x = layer.offset_x;
                     let offset_y = layer.offset_y;
+
+                    if let tiled::LayerType::ObjectLayer(obj_layer) = layer.layer_type() {
+                        // Since object layers are not attached to specific tilesets
+                        // as tile layers are, we process the obj layer with the first tileset
+                        // that's why we skip it here if tileset_index != 0.
+                        if tileset_index > 0 {
+                            continue;
+                        }
+
+                        let objects: Vec<Object> = obj_layer.objects().collect();
+                        log::info!(
+                            "Processing object layer: {}. Object count: {}",
+                            layer.name,
+                            objects.len()
+                        );
+
+                        let mut signs = Vec::new();
+                        for object in obj_layer.objects() {
+                            if object.user_type == "sign" {
+                                let id = match object.properties.get("id") {
+                                    Some(tiled::PropertyValue::IntValue(id)) => *id,
+                                    _ => 0,
+                                };
+
+                                let z = match object.properties.get("z") {
+                                    Some(tiled::PropertyValue::IntValue(z)) => *z,
+                                    _ => 0,
+                                };
+
+                                let tilemap_center_transform =
+                                    get_tilemap_center_transform(
+                                        &map_size, &grid_size, &map_type, z as f32,
+                                    ) * Transform::from_xyz(offset_x, -offset_y, 0.0);
+
+                                // Get the tile pos as object position may not be what we need
+                                let mut tile_pos = TilePos::from_world_pos(
+                                    &Vec2::new(object.x, object.y),
+                                    &map_size,
+                                    &grid_size,
+                                    &TilemapType::Square,
+                                )
+                                .unwrap_or(TilePos::default());
+
+                                // We have different starting points for the tiles
+                                // tiled - upper left
+                                // bevy_ecs_tilemap - lower left
+                                tile_pos.y = (tiled_map.map.height - 1) - tile_pos.y;
+
+                                let world_pos = tilemap_center_transform
+                                    * tile_pos.center_in_world(&grid_size, &map_type).extend(0.0);
+
+                                signs.push(SignData {
+                                    x: world_pos.x,
+                                    y: world_pos.y,
+                                    id: id as u32,
+                                });
+                            }
+                        }
+                        signs_res.as_mut().signs = signs;
+                        continue;
+                    }
 
                     if let Some(PropertyValue::IntValue(ts_index)) =
                         layer.properties.get("tileset_index")
@@ -309,10 +404,6 @@ pub fn process_loaded_maps(
                     }
 
                     let tiled::LayerType::TileLayer(tile_layer) = layer.layer_type() else {
-                        log::info!(
-                            "Skipping layer {} because only tile layers are supported.",
-                            layer.id()
-                        );
                         continue;
                     };
 
@@ -324,19 +415,7 @@ pub fn process_loaded_maps(
                         continue;
                     };
 
-                    let map_size = TilemapSize {
-                        x: tiled_map.map.width,
-                        y: tiled_map.map.height,
-                    };
-
                     log::info!("Processing layer: {}", layer.name);
-
-                    let grid_size = TilemapGridSize {
-                        x: tiled_map.map.tile_width as f32,
-                        y: tiled_map.map.tile_height as f32,
-                    };
-
-                    let map_type = TilemapType::Square;
 
                     let mut tile_storage = TileStorage::empty(map_size);
                     let layer_entity = commands.spawn_empty().id();
@@ -388,10 +467,6 @@ pub fn process_loaded_maps(
                                     },
                                     ..Default::default()
                                 })
-                                .insert(TileIdentifier {
-                                    tile_id: layer_tile.id() as u16,
-                                    tileset_id: tileset_index as u8,
-                                })
                                 .id();
 
                             let collision = &layer_tile.get_tile().unwrap().collision;
@@ -424,16 +499,13 @@ pub fn process_loaded_maps(
                                     // their center of mass lies on the given position
                                     // Tiled on the other hand uses offset from the upper-left
                                     // corner of the tile.
-                                    commands
-                                        .entity(collider_entt)
-                                        .insert(TransformBundle::from(Transform::from_translation(
-                                            Vec3::new(
-                                                c.x + (hw - tileset.tile_width as f32 / 2.0),
-                                                tileset.tile_height as f32 / 2.0 - hh - c.y,
-                                                0.0,
-                                            ),
-                                        )))
-                                        .insert(GlobalTransform::default());
+                                    commands.entity(collider_entt).insert(TransformBundle::from(
+                                        Transform::from_translation(Vec3::new(
+                                            c.x + (hw - tileset.tile_width as f32 / 2.0),
+                                            tileset.tile_height as f32 / 2.0 - hh - c.y,
+                                            0.0,
+                                        )),
+                                    ));
 
                                     commands
                                         .entity(tile_entity)

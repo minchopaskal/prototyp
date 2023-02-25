@@ -3,12 +3,6 @@ use bevy::prelude::*;
 #[derive(Component, Default)]
 pub struct Player;
 
-#[derive(Component, Default, PartialEq, Debug)]
-pub struct TileIdentifier {
-    pub tile_id: u16,
-    pub tileset_id: u8,
-}
-
 #[derive(Component, Default)]
 pub struct Actor;
 
@@ -34,6 +28,35 @@ pub struct Animation {
     pub frame_idx: u8,
 }
 
-// TODO: Actually dir
+#[derive(Component, Default, Debug, PartialEq, PartialOrd)]
+pub enum Direction {
+    #[default]
+    Down,
+    DownRight,
+    Right,
+    UpRight,
+    Up,
+    UpLeft,
+    Left,
+    DownLeft,
+}
+
 #[derive(Component, Default)]
-pub struct SpriteFlip(pub bool);
+pub struct FPSTextMarker;
+
+#[derive(Component, Default)]
+pub struct SignTextMarker;
+
+#[derive(Component)]
+pub struct EntityWrapper(pub Entity);
+
+#[derive(Component, PartialEq)]
+pub struct EntityPair(pub Entity, pub Entity);
+
+#[derive(Component)]
+pub struct Sign {
+    pub handle: usize,
+}
+
+#[derive(Component)]
+pub struct MainCamera;

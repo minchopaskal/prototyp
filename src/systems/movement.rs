@@ -1,5 +1,5 @@
 use crate::{
-    components::{AnimationState, Player, SpriteFlip},
+    components::{AnimationState, Direction, Player},
     resources::VelocityMultiplier,
 };
 use bevy::{
@@ -13,7 +13,7 @@ use bevy_rapier2d::prelude::Velocity;
 pub fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
     mut player_query: Query<
-        (&mut Velocity, &mut SpriteFlip, &mut AnimationState),
+        (&mut Velocity, &mut AnimationState, &mut Direction),
         (With<Player>, Without<Camera>),
     >,
     velocity_mult: Res<VelocityMultiplier>,
@@ -23,25 +23,46 @@ pub fn player_movement(
         fast = 2.0;
     }
 
+    let mut view_dir = (0, 0);
     let mut direction = Vec3::ZERO;
-    let (velocity_mut, sprite_flip, anim_state) = &mut player_query.single_mut();
+    let (velocity_mut, anim_state, player_dir) = &mut player_query.single_mut();
 
     if keyboard_input.pressed(KeyCode::A) {
         direction -= Vec3::new(1.0, 0.0, 0.0);
-        sprite_flip.0 = true;
+        view_dir.0 -= 1;
     }
 
     if keyboard_input.pressed(KeyCode::D) {
         direction += Vec3::new(1.0, 0.0, 0.0);
-        sprite_flip.0 = false;
+        view_dir.0 += 1;
     }
 
     if keyboard_input.pressed(KeyCode::W) {
         direction += Vec3::new(0.0, 1.0, 0.0);
+        view_dir.1 += 1;
     }
 
     if keyboard_input.pressed(KeyCode::S) {
         direction -= Vec3::new(0.0, 1.0, 0.0);
+        view_dir.1 -= 1;
+    }
+
+    if view_dir != (0, 0) {
+        let new_dir = match view_dir {
+            (0, -1) => Direction::Down,
+            (1, -1) => Direction::DownRight,
+            (1, 0) => Direction::Right,
+            (1, 1) => Direction::UpRight,
+            (0, 1) => Direction::Up,
+            (-1, 1) => Direction::UpLeft,
+            (-1, 0) => Direction::Left,
+            (-1, -1) => Direction::DownLeft,
+            _ => Direction::Down,
+        };
+
+        if *player_dir.as_ref() != new_dir {
+            *player_dir.as_mut() = new_dir;
+        }
     }
 
     let mut new_state = AnimationState::Idle;
@@ -69,19 +90,19 @@ pub fn camera_movement(
 ) {
     for (mut camera_transform, mut ortho) in query.iter_mut() {
         if keyboard_input.pressed(KeyCode::Z) {
-            ortho.scale += 2.0 * time.delta_seconds();
+            ortho.scale += time.delta_seconds();
         }
 
         if keyboard_input.pressed(KeyCode::X) {
-            ortho.scale -= 2.0 * time.delta_seconds();
+            ortho.scale -= time.delta_seconds();
         }
 
         if ortho.scale < 0.3 {
             ortho.scale = 0.3;
         }
 
-        if ortho.scale > 10.0 {
-            ortho.scale = 10.0;
+        if ortho.scale > 3.0 {
+            ortho.scale = 3.0;
         }
 
         let player_transform = player_q.single();
