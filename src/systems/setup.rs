@@ -1,8 +1,10 @@
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
+use bevy_proto::prelude::ProtoData;
+use relative_path::RelativePath;
+use std::fs::{self};
 
+use crate::components::{AnimationBundle, MainCamera};
 use crate::tiled;
-use crate::components::{MainCamera, Player, AnimationState, Animation, Direction};
 
 pub fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let map_handle: Handle<tiled::TiledMap> = asset_server.load("map/simple.tmx");
@@ -20,37 +22,46 @@ pub fn spawn_camera(mut commands: Commands) {
 pub fn spawn_player(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut atlasses: ResMut<Assets<TextureAtlas>>,
+    proto_data: Res<ProtoData>,
 ) {
-    let image = asset_server.load("character/doctor/doctor.png");
-    let atlas = TextureAtlas::from_grid(image, Vec2::splat(32.0), 4, 18, None, None);
-    let atlas_handle = atlasses.add(atlas);
+    let player_proto = proto_data
+        .get_prototype("player")
+        .expect("Expected player prototype!");
+    let player_id = player_proto
+        .spawn(&mut commands, &proto_data, &asset_server)
+        .insert(AnimationBundle::default())
+        .id();
 
-    let sprite = TextureAtlasSprite::new(0);
+    let proto_path = RelativePath::new("assets/prototypes");
+    let paths = fs::read_dir(proto_path.to_path("."))
+        .expect(&format!("Path {:?} not found!", proto_path.to_path(".")));
 
-    commands
-        .spawn(Player)
-        .insert(Name::new("Player"))
-        .insert(SpriteSheetBundle {
-            sprite: sprite,
-            texture_atlas: atlas_handle.clone(),
-            ..Default::default()
-        })
-        .insert(Transform::from_xyz(20.0, 0.0, 10.0))
-        .insert(AnimationState::Idle)
-        .insert(Animation {
-            timer: Timer::from_seconds(0.08, TimerMode::Repeating),
-            frames: (0..1).collect(),
-            frame_idx: 0,
-        })
-        .insert(Direction::default())
-        .insert(RigidBody::Dynamic)
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert(Velocity::default())
-        .with_children(|parent| {
-            parent
-                .spawn(Collider::capsule_y(10.0, 7.0))
-                .insert(TransformBundle::from(Transform::from_xyz(0.0, 0.0, 0.0)))
-                .insert(Friction::coefficient(0.0));
-        });
+    for path in paths {
+        if let Err(_) = path {
+            continue;
+        }
+
+        let path = path.unwrap().file_name();
+        let path = path.to_str().unwrap();
+        if !path.starts_with("player.child") {
+            continue;
+        }
+
+        let last_dot = path.rfind(".");
+        if let None = last_dot {
+            continue;
+        }
+
+        let path = &path[0..last_dot.unwrap()];
+
+        let child_proto = proto_data
+            .get_prototype(path)
+            .expect(&format!("Expected {path} prototype!"));
+
+        let child_id = child_proto
+            .spawn(&mut commands, &proto_data, &asset_server)
+            .id();
+
+        commands.entity(player_id).add_child(child_id);
+    }
 }

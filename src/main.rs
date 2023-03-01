@@ -3,11 +3,13 @@ use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_proto::ProtoPlugin;
 use bevy_rapier2d::prelude::*;
 use resources::{CursorPos, SignsPool, TilesProperties, UiSettings, VelocityMultiplier};
 use systems::PrototypSystemLabel;
 
 mod components;
+mod prototypes;
 mod resources;
 mod systems;
 mod tiled;
@@ -38,6 +40,7 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.0))
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(ProtoPlugin::default())
         .insert_resource(UiSettings {
             show_debug_window: false,
         })
@@ -49,6 +52,7 @@ fn main() {
         .init_resource::<CursorPos>()
         .init_resource::<TilesProperties>()
         .init_resource::<SignsPool>()
+        .register_type::<TextureAtlasSprite>()
         .add_startup_system_to_stage(StartupStage::PreStartup, setup::startup)
         .add_startup_system(setup::spawn_camera)
         .add_startup_system(setup::spawn_player)

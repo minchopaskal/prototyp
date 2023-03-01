@@ -23,7 +23,7 @@ pub fn spawn_text<T: Component>(
     asset_server: &Res<AssetServer>,
     text: Vec<TextValue>,
     text_pos: TextPosition,
-    visible: bool, 
+    visible: bool,
     marker: Option<T>,
 ) -> Entity {
     let text_sections: Vec<TextSection> = text
@@ -76,13 +76,13 @@ pub fn spawn_text<T: Component>(
         },
     };
 
-    let id = commands.spawn(TextBundle::from_sections(text_sections)
-        .with_style(Style {
+    let id = commands
+        .spawn(TextBundle::from_sections(text_sections).with_style(Style {
             position_type: PositionType::Absolute,
             position,
             ..Default::default()
-        })
-    ).id();
+        }))
+        .id();
 
     if let Some(m) = marker {
         commands.entity(id).insert(m);
@@ -124,10 +124,10 @@ pub fn spawn_dialog_box<T: Component + Default>(
     asset_server: &Res<AssetServer>,
     name: &str,
     text: &str,
-    marker: Option<T>
+    marker: Option<T>,
 ) -> Entity {
-    let dialogue_box_entt = commands.spawn(
-        NodeBundle {
+    let dialogue_box_entt = commands
+        .spawn(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(80.0), Val::Percent(30.0)),
                 position: UiRect {
@@ -140,13 +140,16 @@ pub fn spawn_dialog_box<T: Component + Default>(
             },
             background_color: Color::rgba(0.2, 0.2, 0.2, 0.4).into(),
             ..default()
-        }
-    )
-    .id();
+        })
+        .id();
 
     // "Copy" the marker
     // TODO: check if we can bound T to be unit type(without user defined trait)
-    let name_marker = if marker.is_some() { Some(T::default()) } else { None };
+    let name_marker = if marker.is_some() {
+        Some(T::default())
+    } else {
+        None
+    };
     let name_entt = spawn_text::<T>(
         commands,
         asset_server,
@@ -162,10 +165,11 @@ pub fn spawn_dialog_box<T: Component + Default>(
         vec![TextValue::Dialogue(text)],
         TextPosition::Percent(10, 30),
         true,
-        marker
+        marker,
     );
 
-    commands.entity(dialogue_box_entt)
+    commands
+        .entity(dialogue_box_entt)
         .add_child(name_entt)
         .add_child(text_entt)
         .id()

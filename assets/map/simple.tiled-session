@@ -7,6 +7,9 @@
     "expandedProjectPaths": [
     ],
     "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
         "bg.tsx": {
             "scaleInDock": 1
         },
@@ -25,6 +28,9 @@
                 "x": 490.5,
                 "y": 349
             }
+        },
+        "simple.tmx#plant": {
+            "scaleInEditor": 1
         },
         "tsx/Decorationspre.tsx": {
             "scaleInDock": 1,

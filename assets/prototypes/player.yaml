@@ -1,0 +1,16 @@
+---
+name: "player"
+components:
+  - type: SpriteSheetBundleDef
+    value:
+       texture_path: character/doctor/doctor.png
+       init_sprite: 0
+       tile_size: 32
+       sprite_width: 4
+       sprite_height: 18
+  - type: Player
+  - type: NameDef
+    value: Player
+  - type: TransformDef
+    value: [20.0, 0.0, 10.0]
+  - type: PhysicsDefault

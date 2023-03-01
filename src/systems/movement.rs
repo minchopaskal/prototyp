@@ -25,60 +25,60 @@ pub fn player_movement(
 
     let mut view_dir = (0, 0);
     let mut direction = Vec3::ZERO;
-    let (velocity_mut, anim_state, player_dir) = &mut player_query.single_mut();
-
-    if keyboard_input.pressed(KeyCode::A) {
-        direction -= Vec3::new(1.0, 0.0, 0.0);
-        view_dir.0 -= 1;
-    }
-
-    if keyboard_input.pressed(KeyCode::D) {
-        direction += Vec3::new(1.0, 0.0, 0.0);
-        view_dir.0 += 1;
-    }
-
-    if keyboard_input.pressed(KeyCode::W) {
-        direction += Vec3::new(0.0, 1.0, 0.0);
-        view_dir.1 += 1;
-    }
-
-    if keyboard_input.pressed(KeyCode::S) {
-        direction -= Vec3::new(0.0, 1.0, 0.0);
-        view_dir.1 -= 1;
-    }
-
-    if view_dir != (0, 0) {
-        let new_dir = match view_dir {
-            (0, -1) => Direction::Down,
-            (1, -1) => Direction::DownRight,
-            (1, 0) => Direction::Right,
-            (1, 1) => Direction::UpRight,
-            (0, 1) => Direction::Up,
-            (-1, 1) => Direction::UpLeft,
-            (-1, 0) => Direction::Left,
-            (-1, -1) => Direction::DownLeft,
-            _ => Direction::Down,
-        };
-
-        if *player_dir.as_ref() != new_dir {
-            *player_dir.as_mut() = new_dir;
+    if let Ok((velocity_mut, anim_state, player_dir)) = &mut player_query.get_single_mut() {
+        if keyboard_input.pressed(KeyCode::A) {
+            direction -= Vec3::new(1.0, 0.0, 0.0);
+            view_dir.0 -= 1;
         }
-    }
 
-    let mut new_state = AnimationState::Idle;
-    if direction != Vec3::ZERO {
-        new_state = if fast != 1.0 {
-            AnimationState::Running
+        if keyboard_input.pressed(KeyCode::D) {
+            direction += Vec3::new(1.0, 0.0, 0.0);
+            view_dir.0 += 1;
+        }
+
+        if keyboard_input.pressed(KeyCode::W) {
+            direction += Vec3::new(0.0, 1.0, 0.0);
+            view_dir.1 += 1;
+        }
+
+        if keyboard_input.pressed(KeyCode::S) {
+            direction -= Vec3::new(0.0, 1.0, 0.0);
+            view_dir.1 -= 1;
+        }
+
+        if view_dir != (0, 0) {
+            let new_dir = match view_dir {
+                (0, -1) => Direction::Down,
+                (1, -1) => Direction::DownRight,
+                (1, 0) => Direction::Right,
+                (1, 1) => Direction::UpRight,
+                (0, 1) => Direction::Up,
+                (-1, 1) => Direction::UpLeft,
+                (-1, 0) => Direction::Left,
+                (-1, -1) => Direction::DownLeft,
+                _ => Direction::Down,
+            };
+
+            if *player_dir.as_ref() != new_dir {
+                *player_dir.as_mut() = new_dir;
+            }
+        }
+
+        let mut new_state = AnimationState::Idle;
+        if direction != Vec3::ZERO {
+            new_state = if fast != 1.0 {
+                AnimationState::Running
+            } else {
+                AnimationState::Walking
+            };
+            velocity_mut.linvel = direction.xy() * velocity_mult.0 * fast;
         } else {
-            AnimationState::Walking
-        };
-        velocity_mut.linvel = direction.xy() * velocity_mult.0 * fast;
-    } else {
-        velocity_mut.linvel = Vec2::ZERO;
-    }
+            velocity_mut.linvel = Vec2::ZERO;
+        }
 
-    if *anim_state.as_ref() != new_state {
-        *anim_state.as_mut() = new_state;
+        if *anim_state.as_ref() != new_state {
+            *anim_state.as_mut() = new_state;
+        }
     }
 }
 

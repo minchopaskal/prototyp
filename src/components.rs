@@ -1,6 +1,8 @@
 use bevy::prelude::*;
+use bevy_proto::ProtoComponent;
+use serde::{Deserialize, Serialize};
 
-#[derive(Component, Default)]
+#[derive(Clone, Component, Default, Serialize, Deserialize, ProtoComponent)]
 pub struct Player;
 
 #[derive(Component, Default)]
@@ -12,23 +14,23 @@ pub struct NPC;
 #[derive(Component, Default)]
 pub struct Enemy;
 
-#[derive(Component, Default, PartialEq, Debug)]
+#[derive(Clone, Component, Default, PartialEq, Debug, Serialize, Deserialize, ProtoComponent)]
 pub enum AnimationState {
-    #[default]
     None,
+    #[default]
     Idle,
     Walking,
     Running,
 }
 
-#[derive(Component, Default, Debug)]
+#[derive(Clone, Component, Default, Debug, Serialize, Deserialize, ProtoComponent)]
 pub struct Animation {
     pub timer: Timer,
     pub frames: Vec<u8>,
     pub frame_idx: u8,
 }
 
-#[derive(Component, Default, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Component, Default, Debug, PartialEq, PartialOrd)]
 pub enum Direction {
     #[default]
     Down,
@@ -39,6 +41,13 @@ pub enum Direction {
     UpLeft,
     Left,
     DownLeft,
+}
+
+#[derive(Bundle, Clone, Default)]
+pub struct AnimationBundle {
+    animation_state: AnimationState,
+    animation: Animation,
+    direction: Direction,
 }
 
 #[derive(Component, Default)]

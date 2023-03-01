@@ -1,10 +1,13 @@
-use bevy::{app::AppExit, log, prelude::*, math::Vec4Swizzles};
+use bevy::{app::AppExit, log, math::Vec4Swizzles, prelude::*};
 use bevy_ecs_tilemap::prelude::*;
 use bevy_egui::{egui, EguiContext};
 use bevy_rapier2d::prelude::Velocity;
 
-use crate::{components::{Player, MainCamera}, resources::{UiSettings, CursorPos}};
 use crate::systems::helpers::window_pos_in_world;
+use crate::{
+    components::{MainCamera, Player},
+    resources::{CursorPos, UiSettings},
+};
 
 pub fn debug_input(
     mut player_q: Query<&mut TextureAtlasSprite, With<Player>>,

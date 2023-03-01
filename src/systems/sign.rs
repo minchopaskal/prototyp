@@ -1,7 +1,11 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::{resources::SignsPool, components::{Sign, EntityPair, EntityWrapper, MainCamera, SignTextMarker}, systems::text::{self, TextValue, TextPosition}};
+use crate::{
+    components::{EntityPair, EntityWrapper, MainCamera, Sign, SignTextMarker},
+    resources::SignsPool,
+    systems::text::{self, TextPosition, TextValue},
+};
 
 pub fn add_sign_sensors(mut commands: Commands, signs_res: Res<SignsPool>) {
     if !signs_res.is_changed() {
@@ -89,7 +93,7 @@ pub fn handle_sign_collision(
                     x: window.width() * ndc.x,
                     // add offset so text appears above sign.
                     // TODO: if direction is DOWN show on the bottom. Also take note of camera zoom
-                    y: window.height() - window.height() * ndc.y - perceived_tile_size, 
+                    y: window.height() - window.height() * ndc.y - perceived_tile_size,
                 };
 
                 let text = format!("Reading sign id: {}", id);

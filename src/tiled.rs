@@ -78,14 +78,12 @@ impl AssetLoader for TiledLoader {
                 .parent()
                 .expect("The asset load context was empty.");
 
-            let filename_path = Path::new(load_context.path().file_name().unwrap());
-
-            let curr_dir = std::env::current_dir().expect("Expected to get pwd.");
-            std::env::set_current_dir("assets/map")?;
+            // We need to give the assets path to the Tiled loader as it doesn't know about bevy
+            let path = Path::new("assets").join(load_context.path());
 
             let mut loader = tiled::Loader::new();
             let map = loader
-                .load_tmx_map_from(BufReader::new(bytes), filename_path)
+                .load_tmx_map_from(BufReader::new(bytes), path)
                 .map_err(|e| anyhow::anyhow!("Could not load TMX map: {e}"))?;
 
             let mut dependencies = Vec::new();
@@ -113,7 +111,7 @@ impl AssetLoader for TiledLoader {
                         TilemapTexture::Vector(tile_images)
                     }
                     Some(img) => {
-                        let tile_path = tmx_dir.join(&img.source);
+                        let tile_path = tmx_dir.join(&img.source.file_name().unwrap());
                         let asset_path = AssetPath::new(tile_path, None);
                         let texture: Handle<Image> = load_context.get_handle(asset_path.clone());
                         dependencies.push(asset_path);
@@ -135,8 +133,6 @@ impl AssetLoader for TiledLoader {
 
             let loaded_asset = LoadedAsset::new(asset_map);
             load_context.set_default_asset(loaded_asset.with_dependencies(dependencies));
-
-            std::env::set_current_dir(curr_dir)?;
 
             Ok(())
         })
