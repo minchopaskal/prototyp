@@ -3,7 +3,7 @@ use bevy_proto::prelude::ProtoData;
 use relative_path::RelativePath;
 use std::fs::{self};
 
-use crate::components::{AnimationBundle, MainCamera};
+use crate::components::MainCamera;
 use crate::tiled;
 
 pub fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -29,7 +29,6 @@ pub fn spawn_player(
         .expect("Expected player prototype!");
     let player_id = player_proto
         .spawn(&mut commands, &proto_data, &asset_server)
-        .insert(AnimationBundle::default())
         .id();
 
     let proto_path = RelativePath::new("assets/prototypes");

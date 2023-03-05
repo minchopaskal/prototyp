@@ -1,35 +1,31 @@
 use bevy::prelude::*;
 
-use crate::components::{Animation, AnimationState, Direction};
+use crate::components::{Animation, AnimationState, Direction, EntityAnimationData};
 
 pub fn update_character_animation(
     mut changed_animation_q: Query<
-        (&mut Animation, &AnimationState, &Direction),
+        (&mut Animation, &AnimationState, &Direction, &EntityAnimationData),
         Or<(Changed<AnimationState>, Changed<Direction>)>,
     >,
 ) {
     // TODO: all of this should be from a config
-    for (mut animation, state, dir) in changed_animation_q.iter_mut() {
-        let mut offset = match state {
-            AnimationState::Running => (36, 4),
-            AnimationState::Walking => (0, 4),
-            AnimationState::Idle => (0, 1),
-            _ => (0, 1),
-        };
+    for (mut animation, state, dir, anim_data) in changed_animation_q.iter_mut() {
+        let anim_data = &anim_data.animations[state];
+        let mut offset = (anim_data.first_frame_idx, anim_data.frame_cnt);
 
         offset.0 += match dir {
             Direction::Down => 0,
-            Direction::DownRight => 4,
-            Direction::Right => 8,
-            Direction::UpRight => 12,
-            Direction::Up => 16,
-            Direction::UpLeft => 20,
-            Direction::Left => 24,
-            Direction::DownLeft => 28,
+            Direction::DownRight => anim_data.dir_offset,
+            Direction::Right => 2 * anim_data.dir_offset,
+            Direction::UpRight => 3 * anim_data.dir_offset,
+            Direction::Up => 4 * anim_data.dir_offset,
+            Direction::UpLeft => 5 * anim_data.dir_offset,
+            Direction::Left => 6 * anim_data.dir_offset,
+            Direction::DownLeft => 7 * anim_data.dir_offset,
         };
 
         *animation = Animation {
-            timer: Timer::from_seconds(0.08, TimerMode::Repeating),
+            timer: Timer::from_seconds(1.0 / anim_data.fps, TimerMode::Repeating),
             frames: (offset.0..offset.0 + offset.1).collect(),
             frame_idx: 0,
         };

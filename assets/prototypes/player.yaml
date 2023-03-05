@@ -14,3 +14,21 @@ components:
   - type: TransformDef
     value: [20.0, 0.0, 10.0]
   - type: PhysicsDefault
+  - type: EntityAnimationData
+    value:
+      animations:
+        Idle:
+          frame_cnt: 1
+          first_frame_idx: 0
+          dir_offset: 4
+          fps: 12.5
+        Walking:
+          frame_cnt: 4
+          first_frame_idx: 0
+          dir_offset: 4
+          fps: 12.5
+        Running:
+          frame_cnt: 4
+          first_frame_idx: 36
+          dir_offset: 4
+          fps: 12.5

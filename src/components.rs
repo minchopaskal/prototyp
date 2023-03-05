@@ -14,7 +14,8 @@ pub struct NPC;
 #[derive(Component, Default)]
 pub struct Enemy;
 
-#[derive(Clone, Component, Default, PartialEq, Debug, Serialize, Deserialize, ProtoComponent)]
+#[derive(Clone, PartialEq, Eq, Default, Debug, Hash)]
+#[derive(Serialize, Deserialize, Component, ProtoComponent)]
 pub enum AnimationState {
     None,
     #[default]
@@ -43,11 +44,26 @@ pub enum Direction {
     DownLeft,
 }
 
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+pub struct AnimationDef {
+    pub frame_cnt: u8,
+    pub first_frame_idx: u8,
+    pub dir_offset: u8,
+    pub fps: f32,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Component)]
+pub struct EntityAnimationData {
+    pub animations: std::collections::HashMap<AnimationState, AnimationDef>
+}
+
 #[derive(Bundle, Clone, Default)]
 pub struct AnimationBundle {
-    animation_state: AnimationState,
-    animation: Animation,
-    direction: Direction,
+    pub animation_state: AnimationState,
+    pub animation: Animation,
+    pub direction: Direction,
+    pub animations: EntityAnimationData,
 }
 
 #[derive(Component, Default)]
