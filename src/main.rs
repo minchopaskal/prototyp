@@ -5,8 +5,8 @@ use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_proto::ProtoPlugin;
 use bevy_rapier2d::prelude::*;
-use resources::{CursorPos, SignsPool, TilesProperties, UiSettings, VelocityMultiplier};
-use systems::PrototypSystemLabel;
+use resources::{CursorPos, SignsPool, TilesProperties, UiSettings, VelocityMultiplier, NpcPool};
+use systems::{PrototypSystemLabel, npc};
 
 mod components;
 mod prototypes;
@@ -52,6 +52,7 @@ fn main() {
         .init_resource::<CursorPos>()
         .init_resource::<TilesProperties>()
         .init_resource::<SignsPool>()
+        .init_resource::<NpcPool>()
         .register_type::<TextureAtlasSprite>()
         .add_startup_system_to_stage(StartupStage::PreStartup, setup::startup)
         .add_startup_system(setup::spawn_camera)
@@ -72,5 +73,6 @@ fn main() {
         .add_system(sign::add_sign_sensors)
         .add_system(sign::handle_sign_collision.label(PrototypSystemLabel::SignUpdate))
         .add_system(sign::fix_sign_style.after(PrototypSystemLabel::SignUpdate))
+        .add_system(npc::spawn_npcs)
         .run();
 }

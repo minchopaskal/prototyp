@@ -19,7 +19,7 @@ use bevy_rapier2d::prelude::*;
 use anyhow::Result;
 use tiled::{Object, ObjectShape, PropertyValue};
 
-use crate::resources::{SignData, SignsPool, TilesProperties};
+use crate::resources::{SignData, SignsPool, TilesProperties, NpcPool, NpcData};
 
 #[derive(Default)]
 pub struct TiledMapPlugin;
@@ -153,6 +153,7 @@ pub fn process_loaded_maps(
     new_maps: Query<&Handle<TiledMap>, Added<Handle<TiledMap>>>,
     mut tileset_props: ResMut<TilesProperties>,
     mut signs_res: ResMut<SignsPool>,
+    mut npc_res: ResMut<NpcPool>,
 ) {
     let mut changed_maps = Vec::<Handle<TiledMap>>::default();
     for event in map_events.iter() {
@@ -341,7 +342,26 @@ pub fn process_loaded_maps(
                         );
 
                         let mut signs = Vec::new();
+                        let mut npcs = Vec::new();
                         for object in obj_layer.objects() {
+                            if object.user_type == "npc" {
+                                let id = match object.properties.get("id") {
+                                    Some(tiled::PropertyValue::StringValue(id)) => id.clone(),
+                                    _ => String::new(),
+                                };
+
+                                if id.is_empty() {
+                                    continue;
+                                }
+
+                                let z = match object.properties.get("z") {
+                                    Some(tiled::PropertyValue::IntValue(z)) => *z,
+                                    _ => 0,
+                                };
+
+                                npcs.push(NpcData{name: id, z: z as u32});
+                            }
+
                             if object.user_type == "sign" {
                                 let id = match object.properties.get("id") {
                                     Some(tiled::PropertyValue::IntValue(id)) => *id,
@@ -383,6 +403,7 @@ pub fn process_loaded_maps(
                             }
                         }
                         signs_res.as_mut().signs = signs;
+                        npc_res.as_mut().npcs = npcs;
                         continue;
                     }
 

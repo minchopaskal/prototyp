@@ -26,7 +26,7 @@
             "selectedLayer": 5,
             "viewCenter": {
                 "x": 490.5,
-                "y": 349
+                "y": 613
             }
         },
         "simple.tmx#plant": {
@@ -54,7 +54,7 @@
         "numbers.tsx"
     ],
     "project": "simple.tiled-project",
-    "property.type": "int",
+    "property.type": "string",
     "recentFiles": [
         "numbers.tsx",
         "plant.tsx",

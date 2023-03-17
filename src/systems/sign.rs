@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    components::{EntityPair, EntityWrapper, MainCamera, Sign, SignTextMarker},
+    components::{EntityPair, EntityWrapper, MainCamera, Sign, SignTextMarker, Player},
     resources::SignsPool,
     systems::text::{self, TextPosition, TextValue},
 };
@@ -30,6 +30,7 @@ pub fn add_sign_sensors(mut commands: Commands, signs_res: Res<SignsPool>) {
 
 // Use below two to show text above some object.
 // We'll need to abstract objects in some way.
+// TODO: only colide with Player!
 pub fn handle_sign_collision(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -53,6 +54,7 @@ pub fn handle_sign_collision(
 
     for collision_event in collision_events.iter() {
         println!("Received collision event: {:?}", collision_event);
+
         let sign_id = match collision_event {
             CollisionEvent::Started(e1, e2, _) => {
                 let sign_entt;

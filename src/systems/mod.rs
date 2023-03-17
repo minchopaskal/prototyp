@@ -8,6 +8,7 @@ pub mod movement;
 pub mod setup;
 pub mod sign;
 pub mod text;
+pub mod npc;
 
 #[derive(SystemLabel)]
 pub enum PrototypSystemLabel {

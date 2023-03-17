@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::{Path, PathBuf}};
 
 use bevy::prelude::*;
 use tiled::PropertyValue;
@@ -36,4 +36,27 @@ pub struct SignData {
 #[derive(Resource, Default)]
 pub struct SignsPool {
     pub signs: Vec<SignData>,
+}
+
+pub struct ObjectId(usize);
+
+pub enum ObjectKind {
+    Sign(String),
+    NPC(PathBuf)
+}
+
+pub struct Object {
+    id: ObjectId,
+    kind: ObjectKind,
+}
+
+#[derive(Debug)]
+pub struct NpcData {
+    pub name: String,
+    pub z: u32,
+}
+
+#[derive(Resource, Default, Debug)]
+pub struct NpcPool {
+    pub npcs: Vec<NpcData>
 }

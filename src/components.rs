@@ -8,8 +8,16 @@ pub struct Player;
 #[derive(Component, Default)]
 pub struct Actor;
 
-#[derive(Component, Default)]
-pub struct NPC;
+pub type NpcId = usize;
+
+#[derive(Default, Clone)]
+#[derive(Serialize, Deserialize, Component, ProtoComponent)]
+pub struct NPC(pub NpcId);
+
+
+#[derive(Default, Clone)]
+#[derive(Serialize, Deserialize, Component, ProtoComponent)]
+pub struct AI;
 
 #[derive(Component, Default)]
 pub struct Enemy;

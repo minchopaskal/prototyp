@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="30" height="30" tilewidth="32" tileheight="32" infinite="0" nextlayerid="8" nextobjectid="5">
+<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="30" height="30" tilewidth="32" tileheight="32" infinite="0" nextlayerid="8" nextobjectid="6">
  <tileset firstgid="1" source="bg.tsx"/>
  <tileset firstgid="177" source="plant.tsx"/>
  <tileset firstgid="201" source="numbers.tsx"/>
@@ -205,6 +205,12 @@
    <properties>
     <property name="id" type="int" value="1"/>
     <property name="z" type="int" value="100"/>
+   </properties>
+  </object>
+  <object id="5" class="npc" x="305" y="497">
+   <properties>
+    <property name="id" value="patient"/>
+    <property name="z" type="int" value="10"/>
    </properties>
   </object>
  </objectgroup>

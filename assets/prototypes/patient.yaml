@@ -1,0 +1,36 @@
+---
+name: "patient"
+components:
+  - type: SpriteSheetBundleDef
+    value:
+       texture_path: character/patient/patient.png
+       init_sprite: 0
+       tile_size: 32
+       sprite_width: 4
+       sprite_height: 18
+  - type: NPC
+    value: 0
+  - type: NameDef
+    value: Patient
+  - type: TransformDef
+    value: [120.0, 0.0, 10.0]
+  - type: PhysicsDefault
+  - type: AI
+  - type: EntityAnimationData
+    value:
+      animations:
+        Idle:
+          frame_cnt: 1
+          first_frame_idx: 0
+          dir_offset: 4
+          fps: 12.5
+        Walking:
+          frame_cnt: 4
+          first_frame_idx: 0
+          dir_offset: 4
+          fps: 12.5
+        Running:
+          frame_cnt: 4
+          first_frame_idx: 36
+          dir_offset: 4
+          fps: 12.5

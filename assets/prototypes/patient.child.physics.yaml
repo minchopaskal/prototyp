@@ -1,0 +1,13 @@
+---
+name: "patient.child.physics"
+components:
+  - type: ColliderDef
+    value:
+      type: Capsule
+      value: [10.0, 7.0]
+  - type: TransformDef
+    value: [0.0, 0.0, 0.0]
+  - type: FrictionDef
+    value: 
+      c: 0.0
+       
