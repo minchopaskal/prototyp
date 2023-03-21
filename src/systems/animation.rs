@@ -28,6 +28,7 @@ pub fn update_character_animation(
             timer: Timer::from_seconds(1.0 / anim_data.fps, TimerMode::Repeating),
             frames: (offset.0..offset.0 + offset.1).collect(),
             frame_idx: 0,
+            first_frame: false,
         };
     }
 }
@@ -35,9 +36,10 @@ pub fn update_character_animation(
 pub fn animate(mut anim_q: Query<(&mut Animation, &mut TextureAtlasSprite)>, time: Res<Time>) {
     for (mut anim, mut sprite) in anim_q.iter_mut() {
         anim.timer.tick(time.delta());
-        if anim.timer.finished() {
+        if anim.first_frame || anim.timer.finished() {
             anim.frame_idx = (anim.frame_idx + 1) % anim.frames.len() as u8;
             *sprite = TextureAtlasSprite::new(anim.frames[anim.frame_idx as usize] as usize);
+            anim.first_frame = false;
         }
     }
 }

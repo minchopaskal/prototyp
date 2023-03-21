@@ -200,7 +200,6 @@
     <property name="z" type="int" value="100"/>
    </properties>
   </object>
-  <object id="2" gid="181" x="351.669" y="574.271" width="32" height="32"/>
   <object id="4" class="sign" x="485.023" y="262.159" width="21.3864" height="18.8333">
    <properties>
     <property name="id" type="int" value="1"/>

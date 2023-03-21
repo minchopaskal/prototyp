@@ -12,8 +12,12 @@ components:
   - type: NameDef
     value: Player
   - type: TransformDef
-    value: [20.0, 0.0, 10.0]
+    value: [20.0, -10.0, 10.0]
+  - type: Speed
+    value: 120.0
   - type: PhysicsDefault
+    value:
+      kind: Dynamic
   - type: EntityAnimationData
     value:
       animations:

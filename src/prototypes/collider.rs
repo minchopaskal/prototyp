@@ -1,5 +1,5 @@
 use bevy::prelude::{AssetServer, Res};
-use bevy_rapier2d::prelude::{Collider, Friction, LockedAxes, RigidBody, Velocity};
+use bevy_rapier2d::prelude::{Collider, Friction, LockedAxes, RigidBody, Velocity, KinematicCharacterController, ActiveEvents, ActiveCollisionTypes};
 use serde::{Deserialize, Serialize};
 
 use bevy_proto::prelude::*;
@@ -11,16 +11,20 @@ enum ColliderShape {
     Circle(f32),
 }
 
-#[derive(Clone, Serialize, Deserialize, ProtoComponent)]
-#[proto_comp(into = "Collider")]
+#[derive(Clone, Serialize, Deserialize)]
 struct ColliderDef(ColliderShape);
 
-impl From<ColliderDef> for Collider {
-    fn from(collider: ColliderDef) -> Self {
-        match collider.0 {
+#[typetag::serde]
+impl ProtoComponent for ColliderDef {
+    fn insert_self(&self, commands: &mut ProtoCommands, _asset_server: &Res<AssetServer>) {
+        let collider = match self.0 {
             ColliderShape::Capsule(x, y) => Collider::capsule_y(x, y),
             ColliderShape::Circle(x) => Collider::ball(x / 2.0),
-        }
+        };
+
+        commands.insert(collider)
+            .insert(ActiveEvents::COLLISION_EVENTS)
+            .insert(ActiveCollisionTypes::default() | ActiveCollisionTypes::KINEMATIC_STATIC | ActiveCollisionTypes::KINEMATIC_KINEMATIC);
     }
 }
 
@@ -36,15 +40,27 @@ impl From<FrictionDef> for Friction {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize, ProtoComponent)]
+#[proto_comp(into = "KinematicCharacterController")]
+struct RapierController;
+
+impl From<RapierController> for KinematicCharacterController {
+    fn from(_: RapierController) -> Self {
+        KinematicCharacterController::default()
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
-struct PhysicsDefault;
+struct PhysicsDefault {
+    kind: RigidBody,
+}
 
 #[typetag::serde]
 impl ProtoComponent for PhysicsDefault {
     fn insert_self(&self, commands: &mut ProtoCommands, _asset_server: &Res<AssetServer>) {
         commands
+            .insert(self.kind)
             .insert(Velocity::default())
-            .insert(RigidBody::Dynamic)
             .insert(LockedAxes::ROTATION_LOCKED);
     }
 }

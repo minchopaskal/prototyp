@@ -5,8 +5,10 @@ use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_proto::ProtoPlugin;
 use bevy_rapier2d::prelude::*;
-use resources::{CursorPos, SignsPool, TilesProperties, UiSettings, VelocityMultiplier, NpcPool};
-use systems::{PrototypSystemLabel, npc};
+use components::TextEntityWrapper;
+use prototypes::npc::Speed;
+use resources::{CursorPos, SignsPool, TilesProperties, UiSettings, NpcPool};
+use systems::{PrototypSystemLabel, npc, collision};
 
 mod components;
 mod prototypes;
@@ -48,21 +50,25 @@ fn main() {
             gravity: Vec2::ZERO,
             ..default()
         })
-        .insert_resource(VelocityMultiplier(120.0))
         .init_resource::<CursorPos>()
         .init_resource::<TilesProperties>()
         .init_resource::<SignsPool>()
         .init_resource::<NpcPool>()
         .register_type::<TextureAtlasSprite>()
+        .register_type::<TextEntityWrapper>()
+        .register_type::<ActiveCollisionTypes>()
         .add_startup_system_to_stage(StartupStage::PreStartup, setup::startup)
         .add_startup_system(setup::spawn_camera)
         .add_startup_system(setup::spawn_player)
         .add_startup_system(text::spawn_fps_text)
+        .add_system(npc::spawn_npcs)
         .add_system(debug::debug_input)
         .add_system(debug::draw_debug_ui)
         .add_system(debug::update_cursor_pos)
         .add_system(movement::player_movement.label(PrototypSystemLabel::Movement))
+        .add_system(movement::ai_movement.label(PrototypSystemLabel::Movement))
         .add_system(movement::camera_movement)
+        .add_system(collision::handle_player_npc_collision)
         .add_system(
             animation::update_character_animation
                 .label(PrototypSystemLabel::UpdateAnimation)
@@ -73,6 +79,5 @@ fn main() {
         .add_system(sign::add_sign_sensors)
         .add_system(sign::handle_sign_collision.label(PrototypSystemLabel::SignUpdate))
         .add_system(sign::fix_sign_style.after(PrototypSystemLabel::SignUpdate))
-        .add_system(npc::spawn_npcs)
         .run();
 }

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, path::{Path, PathBuf}};
 
-use bevy::prelude::*;
+use bevy::{prelude::*, math::Vec3A};
 use tiled::PropertyValue;
 
 #[derive(Resource)]
@@ -22,9 +22,6 @@ pub struct TilesProperties {
     // Map TilesetId -> (Map TileId -> (Map PropName -> PropValue))
     pub props: Vec<Vec<HashMap<String, PropertyValue>>>,
 }
-
-#[derive(Resource, Default)]
-pub struct VelocityMultiplier(pub f32);
 
 #[derive(Debug)]
 pub struct SignData {
@@ -53,7 +50,7 @@ pub struct Object {
 #[derive(Debug)]
 pub struct NpcData {
     pub name: String,
-    pub z: u32,
+    pub pos: Vec3,
 }
 
 #[derive(Resource, Default, Debug)]

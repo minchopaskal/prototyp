@@ -3,6 +3,7 @@ use bevy::prelude::SystemLabel;
 mod helpers;
 
 pub mod animation;
+pub mod collision;
 pub mod debug;
 pub mod movement;
 pub mod setup;

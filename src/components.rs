@@ -37,9 +37,10 @@ pub struct Animation {
     pub timer: Timer,
     pub frames: Vec<u8>,
     pub frame_idx: u8,
+    pub first_frame: bool,
 }
 
-#[derive(Clone, Component, Default, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Component, Default, Debug, PartialEq, PartialOrd)]
 pub enum Direction {
     #[default]
     Down,
@@ -80,8 +81,8 @@ pub struct FPSTextMarker;
 #[derive(Component, Default)]
 pub struct SignTextMarker;
 
-#[derive(Component)]
-pub struct EntityWrapper(pub Entity);
+#[derive(Component, Reflect)]
+pub struct TextEntityWrapper(pub Entity);
 
 #[derive(Component, PartialEq)]
 pub struct EntityPair(pub Entity, pub Entity);
@@ -93,3 +94,6 @@ pub struct Sign {
 
 #[derive(Component)]
 pub struct MainCamera;
+
+#[derive(Component, Default)]
+pub struct NPCDialogMarker;

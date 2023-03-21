@@ -8,13 +8,15 @@ components:
        tile_size: 32
        sprite_width: 4
        sprite_height: 18
+  - type: Speed
+    value: 60.0
   - type: NPC
     value: 0
   - type: NameDef
     value: Patient
-  - type: TransformDef
-    value: [120.0, 0.0, 10.0]
   - type: PhysicsDefault
+    value:
+      kind: Dynamic
   - type: AI
   - type: EntityAnimationData
     value:

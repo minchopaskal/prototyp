@@ -144,6 +144,32 @@ impl AssetLoader for TiledLoader {
     }
 }
 
+fn tiled_pos_to_world_pos(map_size: &TilemapSize, grid_size: &TilemapGridSize, map_type: &TilemapType, z: f32, offset_x: f32, offset_y: f32, tile_map_height: u32, world_pos: Vec2) -> Vec3 {
+    let tilemap_center_transform =
+        get_tilemap_center_transform(
+            map_size, grid_size, map_type, z,
+        ) * Transform::from_xyz(offset_x, -offset_y, 0.0);
+
+    // Get the tile pos as object position may not be what we need
+    let mut tile_pos = TilePos::from_world_pos(
+        &world_pos,
+        &map_size,
+        &grid_size,
+        &TilemapType::Square,
+    )
+    .unwrap_or(TilePos::default());
+
+    // We have different starting points for the tiles
+    // tiled - upper left
+    // bevy_ecs_tilemap - lower left
+    tile_pos.y = (tile_map_height - 1) - tile_pos.y;
+
+    let world_pos = tilemap_center_transform
+        * tile_pos.center_in_world(&grid_size, &map_type).extend(0.0);
+
+    world_pos
+}
+
 pub fn process_loaded_maps(
     mut commands: Commands,
     mut map_events: EventReader<AssetEvent<TiledMap>>,
@@ -356,10 +382,16 @@ pub fn process_loaded_maps(
 
                                 let z = match object.properties.get("z") {
                                     Some(tiled::PropertyValue::IntValue(z)) => *z,
-                                    _ => 0,
+                                    _ => -1,
                                 };
 
-                                npcs.push(NpcData{name: id, z: z as u32});
+                                if z < 0 {
+                                    continue;
+                                }
+
+                                let world_pos = tiled_pos_to_world_pos(&map_size, &grid_size, &map_type, z as f32, offset_x, offset_y, tiled_map.map.height, Vec2::new(object.x, object.y));
+
+                                npcs.push(NpcData{name: id, pos: world_pos});
                             }
 
                             if object.user_type == "sign" {
@@ -369,31 +401,11 @@ pub fn process_loaded_maps(
                                 };
 
                                 let z = match object.properties.get("z") {
-                                    Some(tiled::PropertyValue::IntValue(z)) => *z,
-                                    _ => 0,
+                                    Some(tiled::PropertyValue::IntValue(z)) => *z as f32,
+                                    _ => 0f32,
                                 };
 
-                                let tilemap_center_transform =
-                                    get_tilemap_center_transform(
-                                        &map_size, &grid_size, &map_type, z as f32,
-                                    ) * Transform::from_xyz(offset_x, -offset_y, 0.0);
-
-                                // Get the tile pos as object position may not be what we need
-                                let mut tile_pos = TilePos::from_world_pos(
-                                    &Vec2::new(object.x, object.y),
-                                    &map_size,
-                                    &grid_size,
-                                    &TilemapType::Square,
-                                )
-                                .unwrap_or(TilePos::default());
-
-                                // We have different starting points for the tiles
-                                // tiled - upper left
-                                // bevy_ecs_tilemap - lower left
-                                tile_pos.y = (tiled_map.map.height - 1) - tile_pos.y;
-
-                                let world_pos = tilemap_center_transform
-                                    * tile_pos.center_in_world(&grid_size, &map_type).extend(0.0);
+                                let world_pos = tiled_pos_to_world_pos(&map_size, &grid_size, &map_type, z, offset_x, offset_y, tiled_map.map.height, Vec2::new(object.x, object.y));
 
                                 signs.push(SignData {
                                     x: world_pos.x,
@@ -506,6 +518,10 @@ pub fn process_loaded_maps(
                                         }
                                         _ => Entity::from_raw(0),
                                     };
+
+                                    if collider_entt.index() != 0 {
+                                        commands.entity(collider_entt).insert(ActiveCollisionTypes::default() | ActiveCollisionTypes::KINEMATIC_STATIC);
+                                    }
 
                                     let tile_world_pos = tilemap_center_transform
                                         * tile_pos

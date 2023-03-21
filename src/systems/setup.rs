@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 use bevy_proto::prelude::ProtoData;
-use relative_path::RelativePath;
-use std::fs::{self};
 
 use crate::components::MainCamera;
 use crate::prototypes::spawn_prototype;
@@ -25,5 +23,5 @@ pub fn spawn_player(
     asset_server: Res<AssetServer>,
     proto_data: Res<ProtoData>,
 ) {
-    spawn_prototype("player", &mut commands, &asset_server, &proto_data)
+    spawn_prototype("player", &mut commands, &asset_server, &proto_data);
 }

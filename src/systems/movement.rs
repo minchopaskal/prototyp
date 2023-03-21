@@ -1,6 +1,6 @@
 use crate::{
-    components::{AnimationState, Direction, Player},
-    resources::VelocityMultiplier,
+    components::{AnimationState, Direction, Player, AI, NPC},
+    prototypes::npc::Speed,
 };
 use bevy::{
     input::Input,
@@ -8,15 +8,11 @@ use bevy::{
     prelude::*,
     render::camera::Camera,
 };
-use bevy_rapier2d::prelude::Velocity;
+use bevy_rapier2d::prelude::{Velocity, KinematicCharacterControllerOutput};
 
 pub fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
-    mut player_query: Query<
-        (&mut Velocity, &mut AnimationState, &mut Direction),
-        (With<Player>, Without<Camera>),
-    >,
-    velocity_mult: Res<VelocityMultiplier>,
+    mut player_query: Query<(&mut Velocity, &mut AnimationState, &mut Direction, &Speed), With<Player>>,
 ) {
     let mut fast = 1.0;
     if keyboard_input.pressed(KeyCode::LShift) {
@@ -25,7 +21,7 @@ pub fn player_movement(
 
     let mut view_dir = (0, 0);
     let mut direction = Vec3::ZERO;
-    if let Ok((velocity_mut, anim_state, player_dir)) = &mut player_query.get_single_mut() {
+    if let Ok((velocity_mut, anim_state, player_dir, speed)) = &mut player_query.get_single_mut() {
         if keyboard_input.pressed(KeyCode::A) {
             direction -= Vec3::new(1.0, 0.0, 0.0);
             view_dir.0 -= 1;
@@ -71,7 +67,8 @@ pub fn player_movement(
             } else {
                 AnimationState::Walking
             };
-            velocity_mut.linvel = direction.xy() * velocity_mult.0 * fast;
+
+            velocity_mut.linvel = direction.xy() * speed.0 * fast;
         } else {
             velocity_mut.linvel = Vec2::ZERO;
         }
@@ -114,5 +111,78 @@ pub fn camera_movement(
 
         camera_transform.translation = player_transform.translation;
         camera_transform.translation.z = z;
+    }
+}
+
+fn quantize_dir(dir: Vec3) -> Direction {
+    let dir = dir.normalize();
+
+    let cos_x = dir.dot(Vec3::new(1.0, 0.0, 0.0));
+    let cos_y = dir.dot(Vec3::new(0.0, 1.0, 0.0));
+    let angle = cos_x.acos() * 180.0 / std::f32::consts::PI;
+
+    if cos_y > 0.0 {
+        if angle < 22.5 {
+            Direction::Right
+        } else if angle < 67.5 {
+            Direction::UpRight
+        } else if angle < 112.5 {
+            Direction::Up
+        }  else if angle < 157.5 {
+            Direction::UpLeft
+        } else {
+            Direction::Left
+        }
+    } else {
+        if angle < 22.5 {
+            Direction::Right
+        } else if angle < 67.5 {
+            Direction::DownRight
+        } else if angle < 112.5 {
+            Direction::Down
+        }  else if angle < 157.5 {
+            Direction::DownLeft
+        } else {
+            Direction::Left
+        }
+    }
+}
+
+pub fn ai_movement(
+    mut npc_q: Query<(&mut Velocity, &mut AnimationState, &mut Direction, &Transform, &Speed), (With<NPC>, With<AI>)>,
+    player_q: Query<&Transform, (With<Player>, Without<NPC>)>
+) {
+    let player_pos = player_q.single().translation;
+
+    for (mut velocity, mut state, mut direction, t, speed) in npc_q.iter_mut() {
+        let dir = t.translation - player_pos;
+
+        let mut new_state = AnimationState::Idle;
+        let new_dir: Direction;
+        if dir.length() < 128.0 {
+            let mut fast = 1.0;
+            new_state = AnimationState::Walking;
+            if dir.length() < 96.0 {
+                new_state = AnimationState::Running;
+                fast = 2.0;
+            }
+            velocity.linvel = (fast * speed.0 * dir.normalize()).xy();
+
+            new_dir = quantize_dir(dir);
+        } else {
+            velocity.linvel = Vec2::ZERO;
+            new_dir = *direction.as_ref();
+        }
+
+        // We need to check first, as animation system operates on
+        // `Changed` events. If we use .as_mut() changed events are triggered,
+        // even though we may not have changed anything.
+        if *state.as_ref() != new_state {
+            *state = new_state;
+        }
+
+        if *direction.as_ref() != new_dir {
+            *direction = new_dir;
+        }
     }
 }

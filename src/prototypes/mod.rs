@@ -1,13 +1,14 @@
-use bevy::prelude::{AssetServer, Commands, Res, BuildChildren};
+use bevy::prelude::{AssetServer, Commands, Res, BuildChildren, Entity};
 use bevy_proto::prelude::ProtoData;
 use relative_path::RelativePath;
 
 pub mod animation;
 pub mod collider;
 pub mod common;
+pub mod npc;
 pub mod sprite;
 
-pub fn spawn_prototype(name: &str, mut commands: &mut Commands, asset_server: &Res<AssetServer>, proto_data: &Res<ProtoData>) {
+pub fn spawn_prototype(name: &str, mut commands: &mut Commands, asset_server: &Res<AssetServer>, proto_data: &Res<ProtoData>) -> Entity {
     let proto = proto_data
         .get_prototype(name)
         .expect(&format!("Expected {} prototype!", name));
@@ -45,6 +46,8 @@ pub fn spawn_prototype(name: &str, mut commands: &mut Commands, asset_server: &R
             .spawn(&mut commands, &proto_data, &asset_server)
             .id();
 
-        commands.entity(id).add_child(child_id);                                                     
+        commands.entity(id).add_child(child_id);
     }
+
+    id
 }

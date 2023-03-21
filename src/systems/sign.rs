@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    components::{EntityPair, EntityWrapper, MainCamera, Sign, SignTextMarker, Player},
+    components::{EntityPair, TextEntityWrapper, MainCamera, Sign, SignTextMarker, Player},
     resources::SignsPool,
     systems::text::{self, TextPosition, TextValue},
 };
@@ -30,15 +30,17 @@ pub fn add_sign_sensors(mut commands: Commands, signs_res: Res<SignsPool>) {
 
 // Use below two to show text above some object.
 // We'll need to abstract objects in some way.
-// TODO: only colide with Player!
+// TODO: There should be only one method handling collisions.
 pub fn handle_sign_collision(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut collision_events: EventReader<CollisionEvent>,
     mut contact_force_events: EventReader<ContactForceEvent>,
     sensor_q: Query<&Parent, With<Sensor>>,
+    parents_q: Query<&Parent>,
     sign_q: Query<&Sign>,
-    entt_pairs_q: Query<(&EntityPair, &EntityWrapper)>,
+    player_q: Query<Entity, With<Player>>,
+    entt_pairs_q: Query<(&EntityPair, &TextEntityWrapper)>,
     camera_q: Query<(&Camera, &GlobalTransform, &OrthographicProjection), With<MainCamera>>,
     signs_res: Res<SignsPool>,
     windows: Res<Windows>,
@@ -52,22 +54,36 @@ pub fn handle_sign_collision(
 
     let window = windows.primary();
 
+    let player_entt;
+    if let Ok(p) = player_q.get_single() {
+        player_entt = p;
+    } else {
+        return;
+    }
+
     for collision_event in collision_events.iter() {
         println!("Received collision event: {:?}", collision_event);
 
         let sign_id = match collision_event {
             CollisionEvent::Started(e1, e2, _) => {
-                let sign_entt;
-                if let Ok(p) = sensor_q.get(*e1) {
-                    sign_entt = p.get();
+                let (sign_entt, mut other_entt) = if let Ok(p) = sensor_q.get(*e1) {
+                    (p.get(), *e2)
                 } else if let Ok(p) = sensor_q.get(*e2) {
-                    sign_entt = p.get();
+                    (p.get(), *e1)
                 } else {
-                    sign_entt = Entity::from_raw(0);
+                    (Entity::from_raw(0), Entity::from_raw(0))
+                };
+
+                if let Ok(p) = parents_q.get(other_entt) {
+                    other_entt = p.get();
                 }
 
-                if let Ok(sign) = sign_q.get(sign_entt) {
-                    SignId::Start(sign.handle, *e1, *e2)
+                if other_entt == player_entt {
+                    if let Ok(sign) = sign_q.get(sign_entt) {
+                        SignId::Start(sign.handle, *e1, *e2)
+                    } else {
+                        SignId::Invalid
+                    }
                 } else {
                     SignId::Invalid
                 }
@@ -110,11 +126,11 @@ pub fn handle_sign_collision(
 
                 commands
                     .spawn(EntityPair(e1, e2))
-                    .insert(EntityWrapper(sign_text_entt));
+                    .insert(TextEntityWrapper(sign_text_entt));
             }
             SignId::Stop(e1, e2) => {
                 for pair in entt_pairs_q.iter() {
-                    if pair.1 .0.index() == 0 {
+                    if pair.1.0.index() == 0 {
                         break;
                     }
 
