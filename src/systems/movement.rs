@@ -1,5 +1,5 @@
 use crate::{
-    components::{AnimationState, Direction, Player, AI, NPC},
+    components::{AnimationState, Direction, Player, AI, NPC, AIKind},
     prototypes::npc::Speed,
 };
 use bevy::{
@@ -114,8 +114,8 @@ pub fn camera_movement(
     }
 }
 
-fn quantize_dir(dir: Vec3) -> Direction {
-    let dir = dir.normalize();
+fn quantize_dir(dir: Vec2) -> Direction {
+    let dir = dir.normalize().extend(0.0);
 
     let cos_x = dir.dot(Vec3::new(1.0, 0.0, 0.0));
     let cos_y = dir.dot(Vec3::new(0.0, 1.0, 0.0));
@@ -149,31 +149,50 @@ fn quantize_dir(dir: Vec3) -> Direction {
 }
 
 pub fn ai_movement(
-    mut npc_q: Query<(&mut Velocity, &mut AnimationState, &mut Direction, &Transform, &Speed), (With<NPC>, With<AI>)>,
+    mut npc_q: Query<(Entity, &mut Velocity, &mut AnimationState, &mut Direction, &mut Transform, &AI), With<NPC>>,
+    speed_q: Query<&Speed>,
     player_q: Query<&Transform, (With<Player>, Without<NPC>)>
 ) {
     let player_pos = player_q.single().translation;
 
-    for (mut velocity, mut state, mut direction, t, speed) in npc_q.iter_mut() {
-        let dir = t.translation - player_pos;
-
+    for (entity, mut velocity, mut state, mut direction, t, ai) in npc_q.iter_mut() {
         let mut new_state = AnimationState::Idle;
-        let new_dir: Direction;
-        if dir.length() < 128.0 {
-            let mut fast = 1.0;
-            new_state = AnimationState::Walking;
-            if dir.length() < 96.0 {
-                new_state = AnimationState::Running;
-                fast = 2.0;
+        let mut new_dir = *direction.as_ref();
+        
+        let dir_to_player = t.translation - player_pos;
+
+        match ai.kind {
+        AIKind::Talking => {
+            if dir_to_player.length() < 128.0 {
+                new_dir = quantize_dir(-dir_to_player.xy());
+            } else {
+                new_dir = Direction::Down;
             }
-            velocity.linvel = (fast * speed.0 * dir.normalize()).xy();
+        },
+        AIKind::RunAway => {
+            if dir_to_player.length() < 128.0 {
+                let mult = 2.0 - dir_to_player.length() / 64.0;
+                let default_speed = Speed::default();
+                let speed = speed_q.get(entity).unwrap_or(&default_speed);
 
-            new_dir = quantize_dir(dir);
-        } else {
-            velocity.linvel = Vec2::ZERO;
-            new_dir = *direction.as_ref();
+                velocity.linvel = (mult * speed.0 * dir_to_player.normalize()).xy();
+    
+                new_state = if mult > 1.0 {
+                    AnimationState::Running
+                } else if mult > 0.01 {
+                    AnimationState::Walking
+                } else {
+                    AnimationState::Idle
+                };
+    
+                new_dir = quantize_dir(velocity.linvel);
+            } else {
+                velocity.linvel = Vec2::ZERO;
+            }
+        },
+        _ => { unreachable!() }
         }
-
+        
         // We need to check first, as animation system operates on
         // `Changed` events. If we use .as_mut() changed events are triggered,
         // even though we may not have changed anything.

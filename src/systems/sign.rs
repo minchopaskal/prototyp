@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    components::{EntityPair, TextEntityWrapper, MainCamera, Sign, SignTextMarker, Player},
+    components::{EntityPair, DialogueEntityWrapper, MainCamera, Sign, SignTextMarker, Player},
     resources::SignsPool,
     systems::text::{self, TextPosition, TextValue},
 };
@@ -40,7 +40,7 @@ pub fn handle_sign_collision(
     parents_q: Query<&Parent>,
     sign_q: Query<&Sign>,
     player_q: Query<Entity, With<Player>>,
-    entt_pairs_q: Query<(&EntityPair, &TextEntityWrapper)>,
+    entt_pairs_q: Query<(&EntityPair, &DialogueEntityWrapper)>,
     camera_q: Query<(&Camera, &GlobalTransform, &OrthographicProjection), With<MainCamera>>,
     signs_res: Res<SignsPool>,
     windows: Res<Windows>,
@@ -62,7 +62,6 @@ pub fn handle_sign_collision(
     }
 
     for collision_event in collision_events.iter() {
-        println!("Received collision event: {:?}", collision_event);
 
         let sign_id = match collision_event {
             CollisionEvent::Started(e1, e2, _) => {
@@ -126,7 +125,7 @@ pub fn handle_sign_collision(
 
                 commands
                     .spawn(EntityPair(e1, e2))
-                    .insert(TextEntityWrapper(sign_text_entt));
+                    .insert(DialogueEntityWrapper(sign_text_entt));
             }
             SignId::Stop(e1, e2) => {
                 for pair in entt_pairs_q.iter() {

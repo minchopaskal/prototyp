@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="30" height="30" tilewidth="32" tileheight="32" infinite="0" nextlayerid="8" nextobjectid="6">
+<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="30" height="30" tilewidth="32" tileheight="32" infinite="0" nextlayerid="9" nextobjectid="121">
  <tileset firstgid="1" source="bg.tsx"/>
  <tileset firstgid="177" source="plant.tsx"/>
  <tileset firstgid="201" source="numbers.tsx"/>
- <layer id="1" name="bg" width="30" height="30">
+ <layer id="1" name="bg" width="30" height="30" visible="0">
   <properties>
    <property name="tileset_index" type="int" value="0"/>
    <property name="z" type="int" value="0"/>
@@ -41,6 +41,9 @@
 86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86
 </data>
  </layer>
+ <imagelayer id="8" name="bg_img">
+  <image source="bg.png" width="960" height="960"/>
+ </imagelayer>
  <layer id="5" name="static_event" width="30" height="30">
   <properties>
    <property name="tileset_index" type="int" value="1"/>
@@ -206,9 +209,15 @@
     <property name="z" type="int" value="100"/>
    </properties>
   </object>
-  <object id="5" class="npc" x="305" y="497">
+  <object id="79" class="npc" x="303.758" y="494.333">
    <properties>
     <property name="id" value="patient"/>
+    <property name="z" type="int" value="10"/>
+   </properties>
+  </object>
+  <object id="81" class="npc" x="369" y="335">
+   <properties>
+    <property name="id" value="talking_npc"/>
     <property name="z" type="int" value="10"/>
    </properties>
   </object>

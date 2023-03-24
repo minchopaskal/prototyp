@@ -1,7 +1,8 @@
 use std::io::BufReader;
 use std::{collections::HashMap, path::Path};
 
-use bevy::prelude::Vec2;
+use bevy::prelude::{Vec2, AssetServer};
+use bevy::sprite::SpriteBundle;
 use bevy::{
     asset::{AssetLoader, AssetPath, LoadedAsset},
     log,
@@ -172,6 +173,7 @@ fn tiled_pos_to_world_pos(map_size: &TilemapSize, grid_size: &TilemapGridSize, m
 
 pub fn process_loaded_maps(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut map_events: EventReader<AssetEvent<TiledMap>>,
     maps: Res<Assets<TiledMap>>,
     tile_storage_query: Query<(Entity, &TileStorage)>,
@@ -337,6 +339,10 @@ pub fn process_loaded_maps(
                         continue;
                     }
 
+                    if !layer.visible {
+                        continue;
+                    }
+
                     let map_size = TilemapSize {
                         x: tiled_map.map.width,
                         y: tiled_map.map.height,
@@ -351,6 +357,23 @@ pub fn process_loaded_maps(
 
                     let offset_x = layer.offset_x;
                     let offset_y = layer.offset_y;
+
+                    if let tiled::LayerType::ImageLayer(img_layer) = layer.layer_type() {
+                        if tileset_index > 0 {
+                            continue;
+                        }
+
+                        if let Some(img) = &img_layer.image {
+                            let filename = img.source.as_path().file_name().unwrap();
+                            let path = Path::new("map").join(filename);
+                            let img: Handle<Image> = asset_server.load(path.as_path());
+                            commands.spawn(SpriteBundle {
+                                texture: img,
+                                ..Default::default()
+                            });
+                        }
+                        continue;
+                    }
 
                     if let tiled::LayerType::ObjectLayer(obj_layer) = layer.layer_type() {
                         // Since object layers are not attached to specific tilesets
@@ -518,10 +541,6 @@ pub fn process_loaded_maps(
                                         }
                                         _ => Entity::from_raw(0),
                                     };
-
-                                    if collider_entt.index() != 0 {
-                                        commands.entity(collider_entt).insert(ActiveCollisionTypes::default() | ActiveCollisionTypes::KINEMATIC_STATIC);
-                                    }
 
                                     let tile_world_pos = tilemap_center_transform
                                         * tile_pos

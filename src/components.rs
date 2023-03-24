@@ -2,6 +2,9 @@ use bevy::prelude::*;
 use bevy_proto::ProtoComponent;
 use serde::{Deserialize, Serialize};
 
+#[derive(Component)]
+pub struct Empty;
+
 #[derive(Clone, Component, Default, Serialize, Deserialize, ProtoComponent)]
 pub struct Player;
 
@@ -10,14 +13,25 @@ pub struct Actor;
 
 pub type NpcId = usize;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 #[derive(Serialize, Deserialize, Component, ProtoComponent)]
 pub struct NPC(pub NpcId);
 
+#[derive(Default, Clone, Debug)]
+#[derive(Serialize, Deserialize)]
+pub enum AIKind {
+    #[default]
+    None,
 
-#[derive(Default, Clone)]
-#[derive(Serialize, Deserialize, Component, ProtoComponent)]
-pub struct AI;
+    RunAway,
+    Talking,
+}
+
+#[derive(Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, Component)]
+pub struct AI {
+    pub kind: AIKind,
+}
 
 #[derive(Component, Default)]
 pub struct Enemy;
@@ -82,7 +96,10 @@ pub struct FPSTextMarker;
 pub struct SignTextMarker;
 
 #[derive(Component, Reflect)]
-pub struct TextEntityWrapper(pub Entity);
+pub struct DialogueEntityWrapper(pub Entity);
+
+#[derive(Component, Reflect)]
+pub struct HintEntityWrapper(pub Entity);
 
 #[derive(Component, PartialEq)]
 pub struct EntityPair(pub Entity, pub Entity);
@@ -97,3 +114,12 @@ pub struct MainCamera;
 
 #[derive(Component, Default)]
 pub struct NPCDialogMarker;
+
+#[derive(Component)]
+pub struct InNpcReach(pub Entity);
+
+impl Default for InNpcReach {
+    fn default() -> Self {
+        Self(Entity::from_raw(0))
+    }
+}

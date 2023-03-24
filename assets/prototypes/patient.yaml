@@ -9,7 +9,7 @@ components:
        sprite_width: 4
        sprite_height: 18
   - type: Speed
-    value: 60.0
+    value: 121.0
   - type: NPC
     value: 0
   - type: NameDef
@@ -17,7 +17,18 @@ components:
   - type: PhysicsDefault
     value:
       kind: Dynamic
+  - type: ColliderDef
+    value:
+      shape:
+        type: Capsule
+        value: [8.0, 4.0]
+      collision_events: true
+  - type: FrictionDef
+    value: 
+      c: 10.0
   - type: AI
+    value:
+      kind: RunAway
   - type: EntityAnimationData
     value:
       animations:
