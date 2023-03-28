@@ -9,7 +9,7 @@ components:
        sprite_width: 4
        sprite_height: 18
   - type: NPC
-    value: 0
+    value: 1
   - type: NameDef
     value: TalkingNPC
   - type: PhysicsDefault

@@ -22,11 +22,11 @@
             "scaleInEditor": 1
         },
         "simple.tmx": {
-            "scale": 1,
-            "selectedLayer": 5,
+            "scale": 0.75,
+            "selectedLayer": 6,
             "viewCenter": {
-                "x": 193.5,
-                "y": 405
+                "x": 451.3333333333333,
+                "y": 426.66666666666663
             }
         },
         "simple.tmx#plant": {

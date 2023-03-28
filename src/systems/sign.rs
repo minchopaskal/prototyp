@@ -4,7 +4,7 @@ use bevy_rapier2d::prelude::*;
 use crate::{
     components::{EntityPair, DialogueEntityWrapper, MainCamera, Sign, SignTextMarker, Player},
     resources::SignsPool,
-    systems::text::{self, TextPosition, TextValue},
+    systems::text::{self, TextPosition, TextValue, TextBuilder},
 };
 
 pub fn add_sign_sensors(mut commands: Commands, signs_res: Res<SignsPool>) {
@@ -115,7 +115,7 @@ pub fn handle_sign_collision(
 
                 let text = format!("Reading sign id: {}", id);
                 let sign_text_entt = text::spawn_text(
-                    &mut commands,
+                    TextBuilder::Commands(&mut commands),
                     &asset_server,
                     vec![TextValue::Dialogue(&text)],
                     TextPosition::Absolute(pos.x, pos.y),

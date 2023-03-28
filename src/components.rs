@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_proto::ProtoComponent;
 use serde::{Deserialize, Serialize};
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Empty;
 
 #[derive(Clone, Component, Default, Serialize, Deserialize, ProtoComponent)]
@@ -17,7 +17,7 @@ pub type NpcId = usize;
 #[derive(Serialize, Deserialize, Component, ProtoComponent)]
 pub struct NPC(pub NpcId);
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, PartialEq, Debug)]
 #[derive(Serialize, Deserialize)]
 pub enum AIKind {
     #[default]
@@ -96,7 +96,10 @@ pub struct FPSTextMarker;
 pub struct SignTextMarker;
 
 #[derive(Component, Reflect)]
-pub struct DialogueEntityWrapper(pub Entity);
+pub struct DialogueEntityWrapper(pub Entity); // dialogue box entt
+
+#[derive(Component, Reflect)]
+pub struct InDialogueWith(pub Entity); // Npc
 
 #[derive(Component, Reflect)]
 pub struct HintEntityWrapper(pub Entity);

@@ -2,9 +2,9 @@ use bevy::prelude::*;
 use bevy_rapier2d::{prelude::*, rapier::prelude::CollisionEventFlags};
 use serde::{Serialize, Deserialize};
 
-use crate::{components::{Player, NPC, NPCDialogMarker, DialogueEntityWrapper, AI, AIKind, InNpcReach, HintEntityWrapper, Empty}, systems::text};
+use crate::{components::{Player, NPC, NPCDialogMarker, DialogueEntityWrapper, AI, AIKind, InNpcReach, HintEntityWrapper, Empty, InDialogueWith}, systems::text};
 
-use super::text::{spawn_text, TextValue};
+use super::text::{spawn_text, TextValue, TextBuilder};
 
 #[derive(Component, Copy, Clone, PartialEq, Debug)]
 #[derive(Serialize, Deserialize, Reflect)]
@@ -71,36 +71,38 @@ pub fn handle_player_npc_collision(
                 }
             }
 
-            if is_player && npc.is_some(){
-                if let Ok(_) = dialog_q.get(player) {
-                    continue;
-                }
-                let entt = npc.unwrap();
+            if !is_player || npc.is_none() {
+                continue;
+            }
+            
+            if let Ok(_) = dialog_q.get(player) {
+                continue;
+            }
+            let entt = npc.unwrap();
 
-                let npc_id = entt.0.0;
-                match entt.1.kind {
-                AIKind::None => unreachable!(),
-                AIKind::RunAway => {
-                    let diag_entt = text::spawn_dialog_box(&mut commands, &asset_server, &format!("NPC [{npc_id}]"), "You got me!", Some(NPCDialogMarker));
+            let npc_id = entt.0.0;
+            match entt.1.kind {
+            AIKind::None => unreachable!(),
+            AIKind::RunAway => {
+                let diag_entt = text::spawn_dialog_box(&mut commands, &asset_server, &format!("NPC [{npc_id}]"), "You got me!", Some(NPCDialogMarker));
 
-                    let diag_entt = DialogueEntityWrapper(diag_entt);
-                    commands.entity(player).insert(diag_entt);
-                },
-                AIKind::Talking => {
-                    commands.entity(player).insert(InNpcReach(entt.2));
-                    if !hint_q.contains(player) {
-                        let hint_entt = spawn_text::<Empty>(
-                            &mut commands,
-                            &asset_server,
-                            vec![TextValue::Dialogue(&"Press E to talk")],
-                            text::TextPosition::Percent(40, 90),
-                            true,
-                            None,
-                        );
-                        commands.entity(player).insert(HintEntityWrapper(hint_entt));
-                    }
-                },
+                let diag_entt = DialogueEntityWrapper(diag_entt);
+                commands.entity(player).insert(diag_entt);
+            },
+            AIKind::Talking => {
+                commands.entity(player).insert(InNpcReach(entt.2));
+                if !hint_q.contains(player) {
+                    let hint_entt = spawn_text::<Empty>(
+                        TextBuilder::Commands(&mut commands),
+                        &asset_server,
+                        vec![TextValue::Dialogue(&"Press E to talk")],
+                        text::TextPosition::Percent(40, 90),
+                        true,
+                        None,
+                    );
+                    commands.entity(player).insert(HintEntityWrapper(hint_entt));
                 }
+            },
             }
         },
         CollisionEvent::Stopped(e1, e2, _) => {
@@ -120,45 +122,6 @@ pub fn handle_player_npc_collision(
                 } 
             }
         },
-        }
-    }
-}
-
-pub fn check_npc_in_reach(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    player_q: Query<(Entity, &InNpcReach)>,
-    text_q: Query<&DialogueEntityWrapper>,
-    hint_q: Query<&HintEntityWrapper>,
-    npc_q: Query<&NPC>,
-    keyboard_input: Res<Input<KeyCode>>,
-) {
-    if let Ok(entt) = player_q.get_single() {
-        let player = entt.0;
-
-        if let Ok(text_entt) = text_q.get(entt.0) {
-            if keyboard_input.just_pressed(KeyCode::E) {
-                commands.entity(text_entt.0).despawn_recursive();
-                commands.entity(player).remove::<DialogueEntityWrapper>();
-                return;
-            }
-        }
-
-        if let Ok(npc) = npc_q.get(entt.1.0) {
-            let npc_id = npc.0;
-            if keyboard_input.just_pressed(KeyCode::E) {
-
-                let diag_entt = text::spawn_dialog_box(&mut commands, &asset_server, &format!("NPC [{npc_id}]"), "You got me!", Some(NPCDialogMarker));
-
-                if let Ok(HintEntityWrapper(entt)) = hint_q.get(player) {
-                    commands.entity(*entt).despawn_recursive();
-                    commands.entity(player).remove::<HintEntityWrapper>();
-                } 
-
-                let diag_entt = DialogueEntityWrapper(diag_entt);
-                commands.entity(player)
-                    .insert(diag_entt);
-            }
         }
     }
 }

@@ -3,7 +3,7 @@ use bevy_proto::prelude::{ProtoComponent, ProtoCommands};
 use bevy_rapier2d::prelude::{Collider, Sensor, ActiveEvents};
 use serde::{Serialize, Deserialize};
 
-use crate::components::{AI, AIKind};
+use crate::{components::{AI, AIKind}, dialogue::Dialogue};
 
 #[derive(Component, ProtoComponent, Serialize, Deserialize, Clone, Reflect)]
 pub struct Speed(pub f32);
@@ -23,7 +23,8 @@ impl ProtoComponent for AI {
             commands.insert(AI{ kind: AIKind::RunAway});
         },
         AIKind::Talking => {
-            commands.insert(AI{ kind: AIKind::Talking})
+            commands
+                .insert(AI{ kind: AIKind::Talking})
                 .with_children(|parent| {
                     parent
                         .spawn(Collider::ball(32.0))

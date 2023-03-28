@@ -9,6 +9,7 @@ use resources::{CursorPos, SignsPool, TilesProperties, UiSettings, NpcPool};
 use systems::{PrototypSystemLabel, npc, collision::{self, PhysicsFilterTag, PlayerNpcContantFilter}};
 
 mod components;
+mod dialogue;
 mod prototypes;
 mod resources;
 mod systems;
@@ -60,7 +61,9 @@ fn main() {
         .add_startup_system(setup::spawn_camera)
         .add_startup_system(setup::spawn_player)
         .add_startup_system(text::spawn_fps_text)
-        .add_system(npc::spawn_npcs)
+        .add_system(npc::spawn_npcs.label(PrototypSystemLabel::SpawnNpcs))
+        .add_system(npc::spawn_npc_dialogues.after(PrototypSystemLabel::SpawnNpcs))
+        .add_system(systems::dialogue::resolve_dialogue)
         .add_system(debug::debug_input)
         .add_system(debug::draw_debug_ui)
         .add_system(debug::update_cursor_pos)
@@ -68,7 +71,6 @@ fn main() {
         .add_system(movement::ai_movement.label(PrototypSystemLabel::Movement))
         .add_system(movement::camera_movement)
         .add_system(collision::handle_player_npc_collision)
-        .add_system(collision::check_npc_in_reach)
         .add_system(
             animation::update_character_animation
                 .label(PrototypSystemLabel::UpdateAnimation)

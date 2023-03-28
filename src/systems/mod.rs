@@ -10,10 +10,12 @@ pub mod setup;
 pub mod sign;
 pub mod text;
 pub mod npc;
+pub mod dialogue;
 
 #[derive(SystemLabel)]
 pub enum PrototypSystemLabel {
     Movement,
     UpdateAnimation,
     SignUpdate,
+    SpawnNpcs,
 }

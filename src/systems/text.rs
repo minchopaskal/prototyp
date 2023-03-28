@@ -16,10 +16,15 @@ pub enum TextPosition {
     Absolute(f32, f32),
 }
 
+pub enum TextBuilder<'w, 's, 'a, 'c> {
+    Commands(&'a mut Commands<'w, 's>),
+    Parent(&'c mut ChildBuilder<'w, 's, 'a>)
+}
+
 // @param visibile We can hide the text at first,
 // as we might want to move it depending on it's size.
 pub fn spawn_text<T: Component>(
-    commands: &mut Commands,
+    commands: TextBuilder,
     asset_server: &Res<AssetServer>,
     text: Vec<TextValue>,
     text_pos: TextPosition,
@@ -76,20 +81,33 @@ pub fn spawn_text<T: Component>(
         },
     };
 
-    let id = commands
+    let id;
+    match commands {
+    TextBuilder::Commands(commands) => {
+        id = commands
         .spawn(TextBundle::from_sections(text_sections).with_style(Style {
             position_type: PositionType::Absolute,
             position,
             ..Default::default()
         }))
         .id();
-
-    if let Some(m) = marker {
-        commands.entity(id).insert(m);
-    }
-
-    if !visible {
-        commands.entity(id).insert(Visibility { is_visible: false });
+    
+        if let Some(m) = marker {
+            commands.entity(id).insert(m);
+        }
+    
+        if !visible {
+            commands.entity(id).insert(Visibility { is_visible: false });
+        }
+    },
+    TextBuilder::Parent(commands) => {
+        id = commands.spawn(TextBundle::from_sections(text_sections).with_style(Style {
+            position_type: PositionType::Absolute,
+            position,
+            ..Default::default()
+        }))
+        .id();
+    },
     }
 
     id
@@ -97,7 +115,7 @@ pub fn spawn_text<T: Component>(
 
 pub fn spawn_fps_text(mut commands: Commands, asset_server: Res<AssetServer>) {
     spawn_text(
-        &mut commands,
+        TextBuilder::Commands(&mut commands),
         &asset_server,
         vec![TextValue::Name("FPS:"), TextValue::Debug("0.0")],
         TextPosition::Percent(0, 5),
@@ -136,6 +154,8 @@ pub fn spawn_dialog_box<T: Component + Default>(
                     ..default()
                 },
                 position_type: PositionType::Absolute,
+                justify_content: JustifyContent::SpaceBetween,
+                flex_wrap: FlexWrap::Wrap,
                 ..default()
             },
             background_color: Color::rgba(0.2, 0.2, 0.2, 0.4).into(),
@@ -150,27 +170,27 @@ pub fn spawn_dialog_box<T: Component + Default>(
     } else {
         None
     };
-    let name_entt = spawn_text::<T>(
-        commands,
-        asset_server,
-        vec![TextValue::Dialogue(&format!("{name}:"))],
-        TextPosition::Percent(10, 10),
-        true,
-        name_marker,
-    );
-
-    let text_entt = spawn_text::<T>(
-        commands,
-        asset_server,
-        vec![TextValue::Dialogue(text)],
-        TextPosition::Percent(10, 30),
-        true,
-        marker,
-    );
+    
 
     commands
-        .entity(dialogue_box_entt)
-        .add_child(name_entt)
-        .add_child(text_entt)
+        .entity(dialogue_box_entt).with_children(|parent| {
+            spawn_text::<T>(
+                TextBuilder::Parent(parent),
+                asset_server,
+                vec![TextValue::Dialogue(&format!("{name}:"))],
+                TextPosition::Percent(10, 10),
+                true,
+                name_marker,
+            );
+        
+            spawn_text::<T>(
+                TextBuilder::Parent(parent),
+                asset_server,
+                vec![TextValue::Dialogue(text)],
+                TextPosition::Percent(10, 30),
+                true,
+                marker,
+            );
+        })
         .id()
 }
