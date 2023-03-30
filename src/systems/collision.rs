@@ -98,6 +98,7 @@ pub fn handle_player_npc_collision(
                         vec![TextValue::Dialogue(&"Press E to talk")],
                         text::TextPosition::Percent(40, 90),
                         true,
+                        false,
                         None,
                     );
                     commands.entity(player).insert(HintEntityWrapper(hint_entt));

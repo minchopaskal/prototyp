@@ -120,6 +120,7 @@ pub fn handle_sign_collision(
                     vec![TextValue::Dialogue(&text)],
                     TextPosition::Absolute(pos.x, pos.y),
                     false,
+                    false,
                     Some(SignTextMarker),
                 );
 

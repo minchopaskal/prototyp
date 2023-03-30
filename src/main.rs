@@ -5,7 +5,7 @@ use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_proto::ProtoPlugin;
 use bevy_rapier2d::prelude::*;
-use resources::{CursorPos, SignsPool, TilesProperties, UiSettings, NpcPool};
+use resources::{CursorPos, SignsPool, TilesProperties, UiSettings, NpcPool, VariablePool};
 use systems::{PrototypSystemLabel, npc, collision::{self, PhysicsFilterTag, PlayerNpcContantFilter}};
 
 mod components;
@@ -54,6 +54,7 @@ fn main() {
         .init_resource::<TilesProperties>()
         .init_resource::<SignsPool>()
         .init_resource::<NpcPool>()
+        .init_resource::<VariablePool>()
         .register_type::<TextureAtlasSprite>()
         .register_type::<PhysicsFilterTag>()
         .register_type::<ActiveCollisionTypes>()

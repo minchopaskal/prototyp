@@ -57,3 +57,14 @@ pub struct NpcData {
 pub struct NpcPool {
     pub npcs: Vec<NpcData>
 }
+
+// TODO:
+// - varaible can either be primitive type(Int, Str, Float...)
+//   or custom type(probably we'll need traits here)
+// - See if VariablePool can store VariableID as key instead of String
+#[derive(Default, Debug)]
+pub struct Variable;
+#[derive(Resource, Default, Debug)]
+pub struct VariablePool {
+    pub vars: HashMap<String, Variable>,
+}
